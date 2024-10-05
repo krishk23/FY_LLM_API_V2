@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 load_dotenv()
 
 # Configure the API key for generative AI
-genai.configure(api_key=("AIzaSyDziGvuT1woHnH4_S3L_zQZV55Yj-123A8"))
+genai.configure(api_key=("AIzaSyBTzRq72XY8hR8l3QWXGNxwYA1tAAxj3OI"))
 
 # Initialize FastAPI
 app = FastAPI()
