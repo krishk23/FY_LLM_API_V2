@@ -4,7 +4,6 @@ import PyPDF2 as pdf
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-import re
 
 # Load environment variables
 load_dotenv()
@@ -33,18 +32,7 @@ def input_pdf_text(uploaded_file):
         text += str(page.extract_text())
     return text
 
-# Extract candidate name from resume (if present)
-def extract_candidate_name(resume_text):
-    name = ""
-    # Look for potential name lines in the resume (you can customize this regex pattern)
-    lines = resume_text.split('\n')
-    for line in lines:
-        if re.search(r'Name[: ]', line, re.IGNORECASE):
-            name = line.split(":")[-1].strip()  # Extract the text after "Name:"
-            break
-    return name if name else "Candidate Name Not Found"
-
-# Updated prompt template with matching score calculation logic and table format with full lines
+# Updated prompt template with matching score calculation logic in tabular format
 input_prompt = """
 ### As an advanced Application Tracking System (ATS) with expertise in technology and data science, evaluate the candidate's resume against the provided job description.
 
@@ -60,24 +48,18 @@ input_prompt = """
 4. Calculate the overall matching score by averaging the scores for all skills.
 5. **Format the matching scores in a table as shown below:**
 
-┌──────────────────────────────┬──────────────────┬──────────────────────┬────────────────┐
-| Skill                        | 'Can Do' Level   | 'Should Do' Level     | Matching Score |
-├──────────────────────────────┼──────────────────┼──────────────────────┼────────────────┤
-| HTML                         | Beginner         | Beginner              | 100%           |
-| Python                       | Competent        | Intermediate           | 75%            |
-| Cloud Computing              | Intermediate     | Expert                | 0%             |
-└──────────────────────────────┴──────────────────┴──────────────────────┴────────────────┘
+| Skill                   | 'Can Do' Level  | 'Should Do' Level  | Matching Score |
+|--------------------------|----------------|--------------------|----------------|
+| HTML                     | Beginner       | Beginner           | 100%           |
+| Python                   | Competent      | Intermediate        | 75%            |
 
-6. **Include the total matching score**:
-Total matching score is calculated by averaging the individual skill scores. For example: If 3 skills have scores 100%, 75%, and 0%, the total score is (100 + 75 + 0) / 3 = 58.33%.
-
-7. Generate a detailed report that includes the 'Can Do' list, 'Should Do' list, matching score, analysis of strengths and weaknesses, missing skills, and recommendations for improvement.
+6. Generate a detailed report that includes the 'Can Do' list, 'Should Do' list, matching score, analysis of strengths and weaknesses, missing skills, and recommendations for improvement.
 
 ### Format the output exactly as below:
 
 Candidate Information: 
-• Name: {candidate_name}
-• Email: 
+• Name: 
+• Email:
 'Can Do' List (Skills from Resume):
 • Beginner:
 • Competent:
@@ -89,9 +71,8 @@ Candidate Information:
 • Intermediate:
 • Expert:
 Matching Score Calculation:
-┌──────────────────────────────┬──────────────────┬──────────────────────┬────────────────┐
-| Skill                        | 'Can Do' Level   | 'Should Do' Level     | Matching Score |
-├──────────────────────────────┼──────────────────┼──────────────────────┼────────────────┤
+| Skill                   | 'Can Do' Level  | 'Should Do' Level  | Matching Score |
+|--------------------------|----------------|--------------------|----------------|
 Overall Matching Score: 
 Analysis:
 • Strengths: 
@@ -124,15 +105,11 @@ async def generate_report(
     resume_text = input_pdf_text(resume.file)
     jd_text = input_pdf_text(jd.file)
 
-    # Extract candidate name from resume
-    candidate_name = extract_candidate_name(resume_text)
-
     # Inject the appropriate prompts into the template
     response = get_gemini_response(
         input_prompt.format(
             text=resume_text,
-            jd=jd_text,
-            candidate_name=candidate_name
+            jd=jd_text
         )
     )
 
