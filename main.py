@@ -32,7 +32,7 @@ def input_pdf_text(uploaded_file):
         text += str(page.extract_text())
     return text
 
-# Updated prompt template with matching score calculation logic
+# Updated prompt template with matching score calculation logic in tabular format
 input_prompt = """
 ### As an advanced Application Tracking System (ATS) with expertise in technology and data science, evaluate the candidate's resume against the provided job description.
 
@@ -46,7 +46,14 @@ input_prompt = """
     - Three level difference: 25%
     - No match or missing skill: 0%
 4. Calculate the overall matching score by averaging the scores for all skills.
-5. Generate a detailed report that includes the 'Can Do' list, 'Should Do' list, matching score, analysis of strengths and weaknesses, missing skills, and recommendations for improvement.
+5. **Format the matching scores in a table as shown below:**
+
+| Skill                   | 'Can Do' Level  | 'Should Do' Level  | Matching Score |
+|--------------------------|----------------|--------------------|----------------|
+| HTML                     | Beginner       | Beginner           | 100%           |
+| Python                   | Competent      | Intermediate        | 75%            |
+
+6. Generate a detailed report that includes the 'Can Do' list, 'Should Do' list, matching score, analysis of strengths and weaknesses, missing skills, and recommendations for improvement.
 
 ### Format the output exactly as below:
 
@@ -64,6 +71,8 @@ Candidate Information:
 • Intermediate:
 • Expert:
 Matching Score Calculation:
+| Skill                   | 'Can Do' Level  | 'Should Do' Level  | Matching Score |
+|--------------------------|----------------|--------------------|----------------|
 Overall Matching Score: 
 Analysis:
 • Strengths: 
@@ -77,10 +86,6 @@ def get_gemini_response(input):
     model = genai.GenerativeModel('gemini-pro')
     generation_config = genai.GenerationConfig(
         temperature=0.6,  # Set temperature to 0.6 as per requirement
-       # candidate_count=1,  # Number of responses to generate
-       # max_output_tokens=512,  # Set token limit
-       # top_p=1.0,  # Top-p sampling (optional)
-       # top_k=40  # Top-k sampling (optional)
     )
     
     response = model.generate_content(
